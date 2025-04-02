@@ -3,18 +3,32 @@ services:
     name: tabbycat
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn debateTab.wsgi:application
+    startCommand: gunicorn tabbycat.wsgi:application
     envVars:
-      - key: DJANGO_SETTINGS_MODULE
-        value: debateTab.production_settings
       - key: PYTHON_VERSION
         value: 3.12.0
       - key: DATABASE_URL
         fromDatabase:
           name: tabbycat-db
           property: connectionString
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_SETTINGS_MODULE
+        value: tabbycat.settings_render
+      - key: EMAIL_HOST
+        value: smtp.sendgrid.net
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USE_TLS
+        value: true
+      - key: EMAIL_HOST_USER
+        value: apikey
+      - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: DEFAULT_FROM_EMAIL
+        sync: false
 
 databases:
   - name: tabbycat-db
     databaseName: tabbycat
-    user: tabbycat_user 
+    user: tabbycat 
