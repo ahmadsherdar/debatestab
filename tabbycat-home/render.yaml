@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tabbycat
+    name: debatestab
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn tabbycat.wsgi:application
@@ -9,7 +9,7 @@ services:
         value: 3.12.0
       - key: DATABASE_URL
         fromDatabase:
-          name: tabbycat-db
+          name: debatestab-db
           property: connectionString
       - key: DJANGO_SECRET_KEY
         generateValue: true
@@ -29,6 +29,6 @@ services:
         sync: false
 
 databases:
-  - name: tabbycat-db
-    databaseName: tabbycat
-    user: tabbycat 
+  - name: debatestab-db
+    databaseName: debatestab
+    user: debatestab 
