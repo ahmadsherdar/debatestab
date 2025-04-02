@@ -1,0 +1,20 @@
+{% extends 'tournaments/base.html' %}
+
+{% block title %}Logged Out - DebateTab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Logged Out</h5>
+            </div>
+            <div class="card-body">
+                <p>You have been successfully logged out.</p>
+                <a href="{% url 'login' %}" class="btn btn-primary">Log in again</a>
+                <a href="{% url 'home' %}" class="btn btn-outline-secondary">Return to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

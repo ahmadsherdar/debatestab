@@ -1,0 +1,189 @@
+{% extends "tournaments/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <h2>Record Result</h2>
+    <h4>{{ debate.round.name }} - {{ debate.affirmative_team.name }} vs {{ debate.negative_team.name }}</h4>
+
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group mb-3">
+            <label for="{{ form.winner.id_for_label }}">Winner</label>
+            {{ form.winner }}
+            {% if form.winner.help_text %}
+            <small class="form-text text-muted">{{ form.winner.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3" id="margin-group" style="display: none;">
+            <label for="{{ form.margin.id_for_label }}">Margin for <span id="winning-team-name"></span></label>
+            {{ form.margin }}
+            {% if form.margin.help_text %}
+            <small class="form-text text-muted">{{ form.margin.help_text }}</small>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="{{ form.selected_motion.id_for_label }}">Motion Used</label>
+            {{ form.selected_motion }}
+            {% if form.selected_motion.help_text %}
+            <small class="form-text text-muted">{{ form.selected_motion.help_text }}</small>
+            {% endif %}
+            {% if form.selected_motion.errors %}
+            <div class="alert alert-danger mt-2">
+                {% for error in form.selected_motion.errors %}
+                    {{ error }}
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="row mt-4">
+            <!-- Affirmative Team Speaker Scores -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ debate.affirmative_team.name }} Speaker Points</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for field in form %}
+                            {% if 'aff_speaker_' in field.name %}
+                                <div class="form-group mb-3">
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        <div class="mt-2">
+                            <strong>Total: <span id="aff-total">0.0</span></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Negative Team Speaker Scores -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">{{ debate.negative_team.name }} Speaker Points</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for field in form %}
+                            {% if 'neg_speaker_' in field.name %}
+                                <div class="form-group mb-3">
+                                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                        <div class="mt-2">
+                            <strong>Total: <span id="neg-total">0.0</span></strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{ form.affirmative_score }}
+        {{ form.negative_score }}
+
+        <div class="form-group mb-3 mt-4">
+            <label for="{{ form.notes.id_for_label }}">Notes</label>
+            {{ form.notes }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit Result</button>
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const winnerSelect = document.querySelector('.winner-select');
+    const marginGroup = document.getElementById('margin-group');
+    const winningTeamName = document.getElementById('winning-team-name');
+    const affTeamName = winnerSelect.getAttribute('data-aff-team');
+    const negTeamName = winnerSelect.getAttribute('data-neg-team');
+    const affTotalSpan = document.getElementById('aff-total');
+    const negTotalSpan = document.getElementById('neg-total');
+    const affScoreInput = document.querySelector('input[name="affirmative_score"]');
+    const negScoreInput = document.querySelector('input[name="negative_score"]');
+
+    // Function to calculate and update totals
+    function updateTotals() {
+        let affTotal = 0;
+        let negTotal = 0;
+
+        // Calculate affirmative total
+        document.querySelectorAll('.aff-speaker-score').forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            affTotal += value;
+        });
+
+        // Calculate negative total
+        document.querySelectorAll('.neg-speaker-score').forEach(input => {
+            const value = parseFloat(input.value) || 0;
+            negTotal += value;
+        });
+
+        // Update display and hidden inputs
+        affTotalSpan.textContent = affTotal.toFixed(1);
+        negTotalSpan.textContent = negTotal.toFixed(1);
+        affScoreInput.value = affTotal;
+        negScoreInput.value = negTotal;
+    }
+
+    // Add event listeners for speaker score inputs
+    document.querySelectorAll('.aff-speaker-score, .neg-speaker-score').forEach(input => {
+        input.addEventListener('input', updateTotals);
+    });
+
+    winnerSelect.addEventListener('change', function() {
+        if (this.value) {
+            marginGroup.style.display = 'block';
+            if (this.value === 'A') {
+                winningTeamName.textContent = affTeamName;
+            } else {
+                winningTeamName.textContent = negTeamName;
+            }
+        } else {
+            marginGroup.style.display = 'none';
+        }
+    });
+
+    // Show margin field if winner is already selected (e.g., on form error)
+    if (winnerSelect.value) {
+        marginGroup.style.display = 'block';
+        winningTeamName.textContent = winnerSelect.value === 'A' ? affTeamName : negTeamName;
+    }
+
+    // Calculate initial totals
+    updateTotals();
+});
+</script>
+{% endblock %} 

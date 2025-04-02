@@ -1,0 +1,67 @@
+{% extends 'tournaments/base.html' %}
+
+{% block title %}Round {{ object.number }} Motions - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h2 class="mb-0">Round {{ object.number }} Motions</h2>
+                        {% if object.selected_motion %}
+                            <span class="badge bg-success">Motion Selected</span>
+                        {% else %}
+                            <span class="badge bg-warning">Selection Pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h3 class="mb-4 text-center">{{ tournament.name }}</h3>
+                    
+                    {% if object.selected_motion %}
+                        <div class="alert alert-success">
+                            <h4 class="alert-heading">Selected Motion:</h4>
+                            <p class="mb-0 fw-bold">{{ object.selected_motion }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if not object.selected_motion and motions %}
+                        <div class="alert alert-info mb-4">
+                            <i class="fas fa-info-circle"></i> Teams will veto two motions and debate the remaining one.
+                        </div>
+                        
+                        <div class="motions-container">
+                            {% for motion_id, motion_text in motions %}
+                                <div class="card mb-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <h4 class="mb-0">Motion Option {{ motion_id }}</h4>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-0 display-6 text-center py-4">{{ motion_text }}</p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% elif not motions %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> No motions have been set for this round yet.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'round_detail' object.id %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Round
+                        </a>
+                        <a href="{% url 'tournament_detail' tournament.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home"></i> Tournament Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,105 @@
+{% extends "tournaments/base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Record Speaker Scores</h4>
+                </div>
+                <div class="card-body">
+                    <h5>{{ debate.round.name }} - {{ debate.affirmative_team.name }} vs {{ debate.negative_team.name }}</h5>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        
+                        <div class="row mt-4">
+                            <div class="col-md-6">
+                                <h5 class="text-primary">{{ debate.affirmative_team.name }} (Affirmative)</h5>
+                                {% for field in form %}
+                                    {% if "aff_speaker_" in field.name %}
+                                        <div class="mb-3">
+                                            {{ field|crispy }}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if not debate.affirmative_team.speakers.exists %}
+                                    <div class="alert alert-warning">
+                                        No speakers found for affirmative team.
+                                        <a href="{% url 'speaker_create' debate.affirmative_team.id %}" class="alert-link">Add speakers</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <h5 class="text-danger">{{ debate.negative_team.name }} (Negative)</h5>
+                                {% for field in form %}
+                                    {% if "neg_speaker_" in field.name %}
+                                        <div class="mb-3">
+                                            {{ field|crispy }}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                                {% if not debate.negative_team.speakers.exists %}
+                                    <div class="alert alert-warning">
+                                        No speakers found for negative team.
+                                        <a href="{% url 'speaker_create' debate.negative_team.id %}" class="alert-link">Add speakers</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Debug information -->
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <h6>Form Errors:</h6>
+                                {{ form.errors }}
+                            </div>
+                        {% endif %}
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">Save All Scores</button>
+                            <a href="{% url 'debate_detail' debate.id %}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Scoring Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <p>Valid scores range from {{ debate.round.tournament.min_speaker_score }} to {{ debate.round.tournament.max_speaker_score }}.</p>
+                    
+                    <div class="alert alert-info">
+                        <h6>Score Range Guide:</h6>
+                        <ul class="mb-0">
+                            <li>{{ debate.round.tournament.min_speaker_score }} - Poor performance</li>
+                            <li>{{ debate.round.tournament.min_speaker_score|add:2 }} - Below average</li>
+                            <li>{{ debate.round.tournament.min_speaker_score|add:4 }} - Average</li>
+                            <li>{{ debate.round.tournament.min_speaker_score|add:6 }} - Good</li>
+                            <li>{{ debate.round.tournament.min_speaker_score|add:8 }} - Excellent</li>
+                            <li>{{ debate.round.tournament.max_speaker_score }} - Outstanding</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <h6>Tips:</h6>
+                        <ul class="mb-0">
+                            <li>Enter scores for all speakers</li>
+                            <li>Double-check your entries</li>
+                            <li>Consider relative performance</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

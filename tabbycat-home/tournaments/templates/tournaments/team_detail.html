@@ -1,0 +1,275 @@
+{% extends 'tournaments/base.html' %}
+
+{% block title %}{{ team.name }} - DebateTab{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ team.name }}</h1>
+    <div>
+        <a href="{% url 'team_list' team.tournament.id %}" class="btn btn-outline-secondary">
+            <i class="fas fa-list"></i> All Teams
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Team Details</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Institution:</strong> {{ team.institution }}</p>
+                        <p><strong>Tournament:</strong> <a href="{% url 'tournament_detail' team.tournament.id %}">{{ team.tournament.name }}</a></p>
+                        <p><strong>Created:</strong> {{ team.created_at|date:"F j, Y" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Wins:</strong> {{ team.wins }}</p>
+                        <p><strong>Total Speaker Score:</strong> {{ team.total_speaker_score }}</p>
+                        <p><strong>Speakers:</strong> {{ speakers|length }} of {{ team.tournament.team_size }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if speakers|length < team.tournament.team_size %}
+                    <a href="{% url 'speaker_create' team.id %}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Add Speaker
+                    </a>
+                    {% else %}
+                    <button class="btn btn-secondary" disabled>
+                        <i class="fas fa-user-plus"></i> Maximum Speakers Reached
+                    </button>
+                    {% endif %}
+                    <a href="{% url 'tournament_detail' team.tournament.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-trophy"></i> Tournament Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Team Statistics</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h6>Wins</h6>
+                    <h3>{{ team.wins }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h6>Total Margin</h6>
+                    <h3>{{ team.total_margin }}</h3>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card">
+                    <h6>Total Speaker Score</h6>
+                    <h3>{{ team.total_speaker_score|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Debate History</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Round</th>
+                        <th>Opponent</th>
+                        <th>Position</th>
+                        <th>Result</th>
+                        <th>Margin</th>
+                        <th>Speaker Scores</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for debate in affirmative_debates %}
+                    <tr>
+                        <td>Round {{ debate.round.number }}</td>
+                        <td>{{ debate.negative_team.name }}</td>
+                        <td>Affirmative</td>
+                        <td>
+                            {% if debate.is_completed %}
+                                {% if debate.result.winner == 'A' %}
+                                    <span class="badge bg-success">Won</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Lost</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if debate.is_completed %}
+                                {% if debate.result.winner == 'A' %}
+                                    +{{ debate.result.margin }}
+                                {% else %}
+                                    -{{ debate.result.margin }}
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ debate.result.affirmative_score|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% for debate in negative_debates %}
+                    <tr>
+                        <td>Round {{ debate.round.number }}</td>
+                        <td>{{ debate.affirmative_team.name }}</td>
+                        <td>Negative</td>
+                        <td>
+                            {% if debate.is_completed %}
+                                {% if debate.result.winner == 'N' %}
+                                    <span class="badge bg-success">Won</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Lost</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if debate.is_completed %}
+                                {% if debate.result.winner == 'N' %}
+                                    +{{ debate.result.margin }}
+                                {% else %}
+                                    -{{ debate.result.margin }}
+                                {% endif %}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ debate.result.negative_score|default:"-" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Speakers</h5>
+            </div>
+            <div class="card-body">
+                {% if speakers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Total Score</th>
+                                    <th>Average Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for speaker in speakers %}
+                                <tr>
+                                    <td>{{ speaker.name }}</td>
+                                    <td>{{ speaker.total_score }}</td>
+                                    <td>{{ speaker.average_score }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No speakers have been added to this team yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Debates</h5>
+            </div>
+            <div class="card-body">
+                {% if affirmative_debates or negative_debates %}
+                    <div class="list-group">
+                        {% for debate in affirmative_debates %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">vs {{ debate.negative_team.name }}</h6>
+                                        <small>Round {{ debate.round.number }} - Affirmative</small>
+                                    </div>
+                                    {% if debate.is_completed %}
+                                        {% if debate.result.winner == 'A' %}
+                                            <span class="badge bg-success">Won</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Lost</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        {% for debate in negative_debates %}
+                            <div class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">vs {{ debate.affirmative_team.name }}</h6>
+                                        <small>Round {{ debate.round.number }} - Negative</small>
+                                    </div>
+                                    {% if debate.is_completed %}
+                                        {% if debate.result.winner == 'N' %}
+                                            <span class="badge bg-success">Won</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Lost</span>
+                                        {% endif %}
+                                    {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        This team hasn't participated in any debates yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'tournament_detail' team.tournament.id %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Tournament
+    </a>
+</div>
+{% endblock %} 

@@ -1,0 +1,72 @@
+{% extends 'tournaments/base.html' %}
+
+{% block title %}Record Speaker Score - {{ debate.round.tournament.name }} - DebateTab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Record Speaker Score</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h6>Debate Information:</h6>
+                    <p><strong>Round:</strong> {{ debate.round.name|default:debate.round }}</p>
+                    <p><strong>Teams:</strong> {{ debate.affirmative_team.name }} vs {{ debate.negative_team.name }}</p>
+                    <p><strong>Venue:</strong> {{ debate.venue|default:"Not specified" }}</p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.speaker.id_for_label }}" class="form-label">Speaker</label>
+                        {{ form.speaker.errors }}
+                        <select name="{{ form.speaker.name }}" id="{{ form.speaker.id_for_label }}" class="form-select {% if form.speaker.errors %}is-invalid{% endif %}" required>
+                            <option value="">Select a speaker</option>
+                            {% for speaker in form.speaker.field.queryset %}
+                                <option value="{{ speaker.id }}" {% if form.speaker.value == speaker.id|stringformat:"i" %}selected{% endif %}>
+                                    {{ speaker.name }} ({{ speaker.team.name }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.score.id_for_label }}" class="form-label">Score</label>
+                        {{ form.score.errors }}
+                        <input type="number" name="{{ form.score.name }}" id="{{ form.score.id_for_label }}" class="form-control {% if form.score.errors %}is-invalid{% endif %}" value="{{ form.score.value|default:'75' }}" min="60" max="100" step="0.5" required>
+                        <div class="form-text">Score range: 60-100 (typical range: 70-80)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.position.id_for_label }}" class="form-label">Speaker Position</label>
+                        {{ form.position.errors }}
+                        <select name="{{ form.position.name }}" id="{{ form.position.id_for_label }}" class="form-select {% if form.position.errors %}is-invalid{% endif %}" required>
+                            <option value="">Select position</option>
+                            <option value="1" {% if form.position.value == '1' %}selected{% endif %}>1st Speaker</option>
+                            <option value="2" {% if form.position.value == '2' %}selected{% endif %}>2nd Speaker</option>
+                            <option value="3" {% if form.position.value == '3' %}selected{% endif %}>3rd Speaker</option>
+                            <option value="4" {% if form.position.value == '4' %}selected{% endif %}>Reply Speaker</option>
+                        </select>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'debate_detail' debate.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Score</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,210 @@
+{% extends 'tournaments/base.html' %}
+
+{% block title %}{{ round.name|default:round }} - {{ round.tournament.name }} - DebateTab{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ round.name|default:round }}</h1>
+    <div>
+        {% if round.motion1 or round.motion2 or round.motion3 %}
+        <a href="{% url 'round_motions' round.id %}" class="btn btn-warning me-2">
+            <i class="fas fa-gavel"></i> View Motions
+        </a>
+        {% endif %}
+        <a href="{% url 'speaker_rankings' round.tournament.id %}" class="btn btn-info me-2">
+            <i class="fas fa-trophy"></i> Speaker Rankings
+        </a>
+        <a href="{% url 'tournament_detail' round.tournament.id %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Tournament
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-{% if user.is_authenticated and user == round.tournament.created_by %}8{% else %}12{% endif %}">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Round Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Tournament:</strong> <a href="{% url 'tournament_detail' round.tournament.id %}">{{ round.tournament.name }}</a></p>
+                        <p><strong>Round Number:</strong> {{ round.number }}</p>
+                        <p><strong>Round Type:</strong> 
+                            {% if round.round_type == 'P' %}
+                                Preliminary
+                            {% elif round.round_type == 'Q' %}
+                                Quarterfinal
+                            {% elif round.round_type == 'S' %}
+                                Semifinal
+                            {% elif round.round_type == 'F' %}
+                                Final
+                            {% else %}
+                                {{ round.get_round_type_display }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Start Time:</strong> {{ round.start_time }}</p>
+                        <p><strong>Status:</strong> 
+                            {% if round.is_completed %}
+                                <span class="badge bg-success">Completed</span>
+                            {% else %}
+                                <span class="badge bg-warning">In Progress</span>
+                            {% endif %}
+                        </p>
+                        <p><strong>Debates:</strong> {{ debates|length }}</p>
+                    </div>
+                </div>
+                
+                {% if round.selected_motion %}
+                <div class="mt-3">
+                    <h6>Selected Motion:</h6>
+                    <div class="alert alert-success">
+                        {{ round.selected_motion }}
+                    </div>
+                </div>
+                {% elif round.motion1 or round.motion2 or round.motion3 %}
+                <div class="mt-3">
+                    <h6>Motions:</h6>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle"></i> This round has multiple motion options. 
+                        <a href="{% url 'round_motions' round.id %}" class="alert-link">View all motions</a>
+                    </div>
+                </div>
+                {% elif round.motion %}
+                <div class="mt-3">
+                    <h6>Motion:</h6>
+                    <div class="alert alert-info">
+                        {{ round.motion }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    {% if user.is_authenticated and user == round.tournament.created_by %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if not debates %}
+                        <form method="post" action="{% url 'generate_debates' round.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-random"></i> Generate Debates
+                            </button>
+                        </form>
+                    {% endif %}
+                    
+                    <a href="{% url 'round_motions' round.id %}" class="btn btn-warning">
+                        <i class="fas fa-gavel"></i> View Round Motions
+                    </a>
+                    
+                    {% if not round.is_completed %}
+                        <a href="#" class="btn btn-success">
+                            <i class="fas fa-check-circle"></i> Mark Round as Complete
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'tournament_detail' round.tournament.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-trophy"></i> Tournament Details
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Debates</h5>
+            <span class="badge bg-primary">{{ debates|length }} debates</span>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if debates %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Affirmative Team</th>
+                            <th>Negative Team</th>
+                            <th>Venue</th>
+                            <th>Status</th>
+                            <th>Result</th>
+                            {% if user.is_authenticated %}
+                            <th>Actions</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for debate in debates %}
+                        <tr>
+                            <td>{{ debate.affirmative_team.name }}</td>
+                            <td>{{ debate.negative_team.name }}</td>
+                            <td>{{ debate.venue|default:"Not specified" }}</td>
+                            <td>
+                                {% if debate.is_completed %}
+                                    <span class="badge bg-success">Completed</span>
+                                {% else %}
+                                    <span class="badge bg-warning">In Progress</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if debate.is_completed and debate.result %}
+                                    {% if debate.result.winner == 'A' %}
+                                        {{ debate.affirmative_team.name }} won
+                                    {% else %}
+                                        {{ debate.negative_team.name }} won
+                                    {% endif %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            {% if user.is_authenticated %}
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'debate_detail' debate.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% if user == round.tournament.created_by and not debate.is_completed %}
+                                        <a href="{% url 'result_create' debate.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-gavel"></i> Record Result
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <p>No debates have been generated for this round yet.</p>
+                {% if user.is_authenticated and user == round.tournament.created_by %}
+                <form method="post" action="{% url 'generate_debates' round.id %}" class="mt-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-primary">Generate Debates</button>
+                </form>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'tournament_detail' round.tournament.id %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Tournament
+    </a>
+</div>
+{% endblock %} 

@@ -1,0 +1,246 @@
+{% extends 'tournaments/base.html' %}
+
+{% block title %}{{ tournament.name }} - DebateTab{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ tournament.name }}</h1>
+    <div>
+        {% if user.is_authenticated and user == tournament.created_by %}
+        <a href="{% url 'tournament_update' tournament.id %}" class="btn btn-outline-secondary">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <a href="{% url 'tournament_delete' tournament.id %}" class="btn btn-outline-danger">
+            <i class="fas fa-trash"></i> Delete
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-{% if user.is_authenticated and user == tournament.created_by %}8{% else %}12{% endif %}">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Tournament Details</h5>
+            </div>
+            <div class="card-body">
+                <p>{{ tournament.description }}</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Start Date:</strong> {{ tournament.start_date }}</p>
+                        <p><strong>End Date:</strong> {{ tournament.end_date }}</p>
+                        <p><strong>Created By:</strong> {{ tournament.created_by.username }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Team Size:</strong> {{ tournament.team_size }} speakers</p>
+                        <p><strong>Rounds:</strong> {{ tournament.rounds_count }}</p>
+                        <p><strong>Break Count:</strong> {{ tournament.break_count }} teams</p>
+                        <p><strong>Speaker Score Range:</strong> {{ tournament.min_speaker_score }} to {{ tournament.max_speaker_score }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if user.is_authenticated and user == tournament.created_by %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'team_create' tournament.id %}" class="btn btn-primary">
+                        <i class="fas fa-users"></i> Add Team
+                    </a>
+                    <a href="{% url 'team_list' tournament.id %}" class="btn btn-outline-primary">
+                        <i class="fas fa-list"></i> View Teams
+                    </a>
+                    {% if current_round %}
+                        <a href="{% url 'round_detail' current_round.id %}" class="btn btn-success">
+                            <i class="fas fa-play-circle"></i> Current Round
+                        </a>
+                    {% else %}
+                        <a href="{% url 'round_create' tournament.id %}" class="btn btn-success">
+                            <i class="fas fa-plus-circle"></i> Create Round
+                        </a>
+                    {% endif %}
+                    <a href="{% url 'speaker_rankings' tournament.id %}" class="btn btn-info">
+                        <i class="fas fa-trophy"></i> Speaker Rankings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs mb-4" id="tournamentTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="teams-tab" data-bs-toggle="tab" data-bs-target="#teams" type="button" role="tab" aria-controls="teams" aria-selected="true">
+            <i class="fas fa-users"></i> Teams
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="rounds-tab" data-bs-toggle="tab" data-bs-target="#rounds" type="button" role="tab" aria-controls="rounds" aria-selected="false">
+            <i class="fas fa-calendar-alt"></i> Rounds
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="speakers-tab" data-bs-toggle="tab" data-bs-target="#speakers" type="button" role="tab" aria-controls="speakers" aria-selected="false">
+            <i class="fas fa-trophy"></i> Speaker Rankings
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Content -->
+<div class="tab-content" id="tournamentTabContent">
+    <!-- Teams Tab -->
+    <div class="tab-pane fade show active" id="teams" role="tabpanel" aria-labelledby="teams-tab">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Teams</h5>
+                {% if user.is_authenticated and user == tournament.created_by %}
+                <a href="{% url 'team_create' tournament.id %}" class="btn btn-sm btn-primary">Add Team</a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if teams %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Institution</th>
+                                    <th>Wins</th>
+                                    <th>Speaker Score</th>
+                                    <th>Margin</th>
+                                    {% if user.is_authenticated %}
+                                    <th>Actions</th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for team in teams %}
+                                <tr>
+                                    <td>{{ team.name }}</td>
+                                    <td>{{ team.institution }}</td>
+                                    <td>{{ team.wins }}</td>
+                                    <td>{{ team.total_speaker_score }}</td>
+                                    <td>{{ team.total_margin }}</td>
+                                    {% if user.is_authenticated %}
+                                    <td>
+                                        <a href="{% url 'team_detail' team.id %}" class="btn btn-sm btn-outline-primary">
+                                            View Details
+                                        </a>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No teams have been added to this tournament yet.
+                        {% if user.is_authenticated and user == tournament.created_by %}
+                        <a href="{% url 'team_create' tournament.id %}" class="alert-link">Add a team</a>.
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Rounds Tab -->
+    <div class="tab-pane fade" id="rounds" role="tabpanel" aria-labelledby="rounds-tab">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Rounds</h5>
+                {% if user.is_authenticated and user == tournament.created_by %}
+                <a href="{% url 'round_create' tournament.id %}" class="btn btn-sm btn-primary">Create Round</a>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if rounds %}
+                    <div class="list-group">
+                        {% for round in rounds %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ round.name|default:round }}</h6>
+                                    <small>{{ round.start_time }}</small>
+                                </div>
+                                <div>
+                                    {% if round.is_completed %}
+                                        <span class="badge bg-success rounded-pill me-2">Completed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning rounded-pill me-2">In Progress</span>
+                                    {% endif %}
+                                    <a href="{% url 'round_detail' round.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                    {% if user.is_authenticated and user == tournament.created_by and round.motion1 %}
+                                    <a href="{% url 'round_motions' round.id %}" class="btn btn-sm btn-outline-info">View Motions</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No rounds have been created for this tournament yet.
+                        {% if user.is_authenticated and user == tournament.created_by %}
+                        <a href="{% url 'round_create' tournament.id %}" class="alert-link">Create the first round</a>.
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Speaker Rankings Tab -->
+    <div class="tab-pane fade" id="speakers" role="tabpanel" aria-labelledby="speakers-tab">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Speaker Rankings</h5>
+            </div>
+            <div class="card-body">
+                {% if speakers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Speaker</th>
+                                    <th>Team</th>
+                                    <th>Total Score</th>
+                                    <th>Average Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for i, speaker in speakers_with_rank %}
+                                <tr>
+                                    <td>{{ i }}</td>
+                                    <td>{{ speaker.name }}</td>
+                                    <td>{{ speaker.team.name }}</td>
+                                    <td>{{ speaker.total_score|floatformat:2 }}</td>
+                                    <td>{{ speaker.average_score|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'speaker_rankings' tournament.id %}" class="btn btn-outline-primary">
+                            View Detailed Speaker Rankings
+                        </a>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        No speaker scores have been recorded yet.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

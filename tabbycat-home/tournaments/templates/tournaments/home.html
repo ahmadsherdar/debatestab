@@ -1,0 +1,148 @@
+{% extends 'tournaments/base.html' %}
+
+{% block title %}DebateTab - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="container px-4 py-5">
+    <div class="row flex-lg-row-reverse align-items-center g-5 py-5">
+        <div class="col-lg-6">
+            <img src="https://images.unsplash.com/photo-1561489413-985b06da5bee?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80" 
+                 class="d-block mx-lg-auto img-fluid rounded" alt="Debate" width="700" height="500" loading="lazy">
+        </div>
+        <div class="col-lg-6">
+            <h1 class="display-5 fw-bold mb-3">Organize Your Debate Tournaments with Ease</h1>
+            <p class="lead">DebateTab is a powerful platform that helps you manage debate tournaments, track speaker scores, and organize competitive events efficiently.</p>
+            
+            {% if not user.is_authenticated %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 me-md-2">Create Your Account</a>
+                <a href="{% url 'login' %}" class="btn btn-outline-secondary btn-lg px-4">Login</a>
+            </div>
+            {% else %}
+            <div class="d-grid gap-2 d-md-flex justify-content-md-start mt-4">
+                <a href="{% url 'tournament_create' %}" class="btn btn-primary btn-lg px-4 me-md-2">Create Tournament</a>
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-lg px-4">Go to Dashboard</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Features Section -->
+<div class="container px-4 py-5" id="featured-3">
+    <h2 class="pb-2 border-bottom">Why Choose DebateTab?</h2>
+    <div class="row g-4 py-5 row-cols-1 row-cols-lg-3">
+        <div class="feature col">
+            <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3 rounded p-3">
+                <i class="fas fa-trophy"></i>
+            </div>
+            <h3>Tournament Management</h3>
+            <p>Create and manage debate tournaments with ease. Set up rounds, schedule debates, and track team performance.</p>
+        </div>
+        <div class="feature col">
+            <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3 rounded p-3">
+                <i class="fas fa-chart-bar"></i>
+            </div>
+            <h3>Speaker Scoring</h3>
+            <p>Record and track speaker scores, generate rankings, and provide detailed feedback for all participants.</p>
+        </div>
+        <div class="feature col">
+            <div class="feature-icon d-inline-flex align-items-center justify-content-center text-bg-primary bg-gradient fs-2 mb-3 rounded p-3">
+                <i class="fas fa-users"></i>
+            </div>
+            <h3>Team Management</h3>
+            <p>Organize teams and speakers, track their performance across rounds, and manage tournament participation.</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Active Tournaments</h5>
+            </div>
+            <div class="card-body">
+                {% if active_tournaments %}
+                    <div class="list-group">
+                        {% for tournament in active_tournaments %}
+                            <a href="{% url 'tournament_detail' tournament.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ tournament.name }}</h5>
+                                    <small>Ends: {{ tournament.end_date }}</small>
+                                </div>
+                                <p class="mb-1">{{ tournament.description|truncatechars:100 }}</p>
+                                <small>Created by: {{ tournament.created_by.username }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No active tournaments at the moment.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Upcoming Tournaments</h5>
+            </div>
+            <div class="card-body">
+                {% if upcoming_tournaments %}
+                    <div class="list-group">
+                        {% for tournament in upcoming_tournaments %}
+                            <a href="{% url 'tournament_detail' tournament.id %}" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h5 class="mb-1">{{ tournament.name }}</h5>
+                                    <small>Starts: {{ tournament.start_date }}</small>
+                                </div>
+                                <p class="mb-1">{{ tournament.description|truncatechars:100 }}</p>
+                                <small>Created by: {{ tournament.created_by.username }}</small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No upcoming tournaments scheduled.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Features</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-trophy fa-3x mb-3 text-primary"></i>
+                            <h4>Tournament Management</h4>
+                            <p>Create and manage multiple tournaments with customizable settings.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-users fa-3x mb-3 text-primary"></i>
+                            <h4>Team Registration</h4>
+                            <p>Register teams and speakers, track their performance throughout the tournament.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center mb-4">
+                            <i class="fas fa-chart-line fa-3x mb-3 text-primary"></i>
+                            <h4>Results & Statistics</h4>
+                            <p>Record debate results and view comprehensive statistics and standings.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

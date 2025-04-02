@@ -1,0 +1,94 @@
+{% extends 'tournaments/base.html' %}
+{% load tournament_extras %}
+
+{% block title %}Speaker Rankings - {{ tournament.name }} - DebateTab{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Speaker Rankings - {{ tournament.name }}</h1>
+    <div>
+        <a href="{% url 'tournament_detail' tournament.id %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Tournament
+        </a>
+    </div>
+</div>
+
+<div class="alert alert-info mb-4">
+    <h5>About Speaker Rankings</h5>
+    <p>This page shows the rankings of all speakers in the tournament based on their scores across all rounds.</p>
+    <p><strong>Score Range:</strong> {{ tournament.min_speaker_score }} to {{ tournament.max_speaker_score }}</p>
+    <p><strong>Team Size:</strong> {{ tournament.team_size }} speakers per team</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">Speaker Rankings</h5>
+            <span class="badge bg-primary">{{ speakers|length }} speakers</span>
+        </div>
+    </div>
+    <div class="card-body">
+        {% if speakers %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Speaker</th>
+                            <th>Team</th>
+                            {% for round in rounds %}
+                                <th>Round {{ round.number }}</th>
+                            {% endfor %}
+                            <th>Total Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for speaker in speakers %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ speaker.name }}</td>
+                            <td>{{ speaker.team.name }}</td>
+                            {% for round in rounds %}
+                                <td>
+                                    {% with score=speaker_round_scores|get_item:speaker.id|get_item:round.id %}
+                                        {% if score > 0 %}
+                                            {{ score|floatformat:1 }}
+                                        {% else %}
+                                            <span class="text-muted">0.0</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                            {% endfor %}
+                            <td><strong>{{ speaker.total_score|floatformat:1 }}</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <p>No speaker scores have been recorded for this tournament yet.</p>
+                <p>After debates are completed, you can record speaker scores from the debate detail page.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'tournament_detail' tournament.id %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Tournament
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    });
+</script>
+{% endblock %} 

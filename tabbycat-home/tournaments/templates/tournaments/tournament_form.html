@@ -1,0 +1,135 @@
+{% extends 'tournaments/base.html' %}
+
+{% block title %}{% if form.instance.id %}Edit Tournament{% else %}Create Tournament{% endif %} - DebateTab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">{% if form.instance.id %}Edit Tournament{% else %}Create Tournament{% endif %}</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Tournament Name</label>
+                        {{ form.name.errors }}
+                        <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" class="form-control {% if form.name.errors %}is-invalid{% endif %}" value="{{ form.name.value|default:'' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description.errors }}
+                        <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" class="form-control {% if form.description.errors %}is-invalid{% endif %}" rows="4">{{ form.description.value|default:'' }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.start_date.id_for_label }}" class="form-label">Start Date</label>
+                                {{ form.start_date.errors }}
+                                <input type="date" name="{{ form.start_date.name }}" id="{{ form.start_date.id_for_label }}" class="form-control {% if form.start_date.errors %}is-invalid{% endif %}" value="{{ form.start_date.value|date:'Y-m-d'|default:'' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.end_date.id_for_label }}" class="form-label">End Date</label>
+                                {{ form.end_date.errors }}
+                                <input type="date" name="{{ form.end_date.name }}" id="{{ form.end_date.id_for_label }}" class="form-control {% if form.end_date.errors %}is-invalid{% endif %}" value="{{ form.end_date.value|date:'Y-m-d'|default:'' }}" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.team_size.id_for_label }}" class="form-label">Team Size</label>
+                                {{ form.team_size.errors }}
+                                <select name="{{ form.team_size.name }}" id="{{ form.team_size.id_for_label }}" class="form-select {% if form.team_size.errors %}is-invalid{% endif %}">
+                                    {% for value, text in form.fields.team_size.choices %}
+                                        <option value="{{ value }}" {% if form.team_size.value == value %}selected{% endif %}>{{ text }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Selecting 2 speakers will set break to 16 teams. Selecting 3 speakers will set break to 8 teams.</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.rounds_count.id_for_label }}" class="form-label">Rounds</label>
+                                {{ form.rounds_count.errors }}
+                                <input type="number" name="{{ form.rounds_count.name }}" id="{{ form.rounds_count.id_for_label }}" class="form-control {% if form.rounds_count.errors %}is-invalid{% endif %}" value="{{ form.rounds_count.value|default:'5' }}" min="1" max="20" required>
+                                <div class="form-text">Number of preliminary rounds</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Break Count</label>
+                        <input type="text" class="form-control" id="break_count_display" value="{% if form.team_size.value == 2 %}16 teams{% else %}8 teams{% endif %}" disabled>
+                        <div class="form-text">Number of teams that break to elimination rounds (determined by team size)</div>
+                        <input type="hidden" name="{{ form.break_count.name }}" id="break_count_hidden" value="{{ form.break_count.value|default:'8' }}">
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.min_speaker_score.id_for_label }}" class="form-label">Minimum Speaker Score</label>
+                                {{ form.min_speaker_score.errors }}
+                                <input type="number" name="{{ form.min_speaker_score.name }}" id="{{ form.min_speaker_score.id_for_label }}" class="form-control {% if form.min_speaker_score.errors %}is-invalid{% endif %}" value="{{ form.min_speaker_score.value|default:'69.0' }}" min="0" max="100" step="0.5" required>
+                                <div class="form-text">Lowest score a speaker can receive</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="{{ form.max_speaker_score.id_for_label }}" class="form-label">Maximum Speaker Score</label>
+                                {{ form.max_speaker_score.errors }}
+                                <input type="number" name="{{ form.max_speaker_score.name }}" id="{{ form.max_speaker_score.id_for_label }}" class="form-control {% if form.max_speaker_score.errors %}is-invalid{% endif %}" value="{{ form.max_speaker_score.value|default:'79.0' }}" min="0" max="100" step="0.5" required>
+                                <div class="form-text">Highest score a speaker can receive</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            {% if form.instance.id %}Update Tournament{% else %}Create Tournament{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const teamSizeSelect = document.getElementById('{{ form.team_size.id_for_label }}');
+        const breakCountDisplay = document.getElementById('break_count_display');
+        const breakCountHidden = document.getElementById('break_count_hidden');
+        
+        // Function to update break count based on team size
+        function updateBreakCount() {
+            const teamSize = parseInt(teamSizeSelect.value);
+            const breakCount = teamSize === 2 ? 16 : 8;
+            
+            breakCountDisplay.value = breakCount + ' teams';
+            breakCountHidden.value = breakCount;
+        }
+        
+        // Add event listener to team size select
+        teamSizeSelect.addEventListener('change', updateBreakCount);
+    });
+</script>
+{% endblock %} 

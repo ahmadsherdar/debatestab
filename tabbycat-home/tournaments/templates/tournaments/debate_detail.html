@@ -1,0 +1,216 @@
+{% extends 'tournaments/base.html' %}
+{% load tournament_extras %}
+
+{% block title %}Debate Details - {{ debate.round.tournament.name }} - DebateTab{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Debate Details</h1>
+    <div>
+        <a href="{% url 'speaker_rankings' debate.round.tournament.id %}" class="btn btn-info me-2">
+            <i class="fas fa-trophy"></i> Speaker Rankings
+        </a>
+        <a href="{% url 'round_detail' debate.round.id %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Round
+        </a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-{% if user.is_authenticated and user == debate.round.tournament.created_by %}8{% else %}12{% endif %}">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Debate Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Tournament:</strong> <a href="{% url 'tournament_detail' debate.round.tournament.id %}">{{ debate.round.tournament.name }}</a></p>
+                        <p><strong>Round:</strong> <a href="{% url 'round_detail' debate.round.id %}">{{ debate.round.name|default:debate.round }}</a></p>
+                        <p><strong>Venue:</strong> {{ debate.venue|default:"Not specified" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Status:</strong> 
+                            {% if debate.is_completed %}
+                                <span class="badge bg-success">Completed</span>
+                            {% else %}
+                                <span class="badge bg-warning">In Progress</span>
+                            {% endif %}
+                        </p>
+                        {% if debate.is_completed and debate.result %}
+                            <p><strong>Winner:</strong> 
+                                {% if debate.result.winner == 'A' %}
+                                    {{ debate.affirmative_team.name }} (Affirmative)
+                                {% else %}
+                                    {{ debate.negative_team.name }} (Negative)
+                                {% endif %}
+                            </p>
+                            <p><strong>Score:</strong> {{ debate.result.affirmative_score }} - {{ debate.result.negative_score }}</p>
+                            <p><strong>Margin:</strong> {{ debate.result.margin }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if user.is_authenticated and user == debate.round.tournament.created_by %}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    {% if not debate.is_completed %}
+                        <a href="{% url 'result_create' debate.id %}" class="btn btn-primary">
+                            <i class="fas fa-gavel"></i> Record Result & Speaker Scores
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Affirmative Team</h5>
+            </div>
+            <div class="card-body">
+                <h5>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'team_detail' debate.affirmative_team.id %}">{{ debate.affirmative_team.name }}</a>
+                    {% else %}
+                    {{ debate.affirmative_team.name }}
+                    {% endif %}
+                </h5>
+                <p class="text-muted">{{ debate.affirmative_team.institution }}</p>
+                
+                <h6 class="mt-4">Speakers:</h6>
+                {% with aff_speakers=debate.affirmative_team.speakers.all %}
+                    {% if aff_speakers %}
+                        <ul class="list-group">
+                            {% for speaker in aff_speakers %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ speaker.name }}
+                                    {% if debate.is_completed and debate.result %}
+                                        {% with speaker_score=aff_speaker_scores|get_item:speaker.id %}
+                                            {% if speaker_score %}
+                                                <span class="badge bg-primary rounded-pill">{{ speaker_score }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary rounded-pill">No score</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <span class="badge bg-warning rounded-pill">Pending</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No speakers registered for this team.</p>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Negative Team</h5>
+            </div>
+            <div class="card-body">
+                <h5>
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'team_detail' debate.negative_team.id %}">{{ debate.negative_team.name }}</a>
+                    {% else %}
+                    {{ debate.negative_team.name }}
+                    {% endif %}
+                </h5>
+                <p class="text-muted">{{ debate.negative_team.institution }}</p>
+                
+                <h6 class="mt-4">Speakers:</h6>
+                {% with neg_speakers=debate.negative_team.speakers.all %}
+                    {% if neg_speakers %}
+                        <ul class="list-group">
+                            {% for speaker in neg_speakers %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ speaker.name }}
+                                    {% if debate.is_completed and debate.result %}
+                                        {% with speaker_score=neg_speaker_scores|get_item:speaker.id %}
+                                            {% if speaker_score %}
+                                                <span class="badge bg-primary rounded-pill">{{ speaker_score }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary rounded-pill">No score</span>
+                                            {% endif %}
+                                        {% endwith %}
+                                    {% else %}
+                                        <span class="badge bg-warning rounded-pill">Pending</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No speakers registered for this team.</p>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if debate.is_completed and debate.result %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Result Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>{{ debate.affirmative_team.name }} (Affirmative)</h6>
+                        <p><strong>Total Score:</strong> {{ debate.result.affirmative_score }}</p>
+                        <p><strong>Margin:</strong> 
+                            {% if debate.result.winner == 'A' %}
+                                +{{ debate.result.margin }}
+                            {% else %}
+                                -{{ debate.result.margin }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>{{ debate.negative_team.name }} (Negative)</h6>
+                        <p><strong>Total Score:</strong> {{ debate.result.negative_score }}</p>
+                        <p><strong>Margin:</strong> 
+                            {% if debate.result.winner == 'N' %}
+                                +{{ debate.result.margin }}
+                            {% else %}
+                                -{{ debate.result.margin }}
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                {% if debate.result.notes %}
+                <div class="mt-3">
+                    <h6>Notes:</h6>
+                    <p class="text-muted">{{ debate.result.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'round_detail' debate.round.id %}" class="btn btn-outline-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Round
+    </a>
+</div>
+{% endblock %} 

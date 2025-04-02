@@ -1,0 +1,45 @@
+{% extends 'tournaments/base.html' %}
+
+{% block title %}Add Speaker - {{ team.name }} - DebateTab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Add Speaker to {{ team.name }}</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-3">
+                    <p class="mb-0">
+                        <strong>Speaker Count:</strong> {{ current_speakers_count }} of {{ max_speakers }} speakers added
+                    </p>
+                </div>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Speaker Name</label>
+                        {{ form.name.errors }}
+                        <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" class="form-control {% if form.name.errors %}is-invalid{% endif %}" value="{{ form.name.value|default:'' }}" required>
+                    </div>
+                    
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'team_detail' team.id %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Add Speaker</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
